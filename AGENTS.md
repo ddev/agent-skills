@@ -9,7 +9,9 @@ requests and writing style follow DDEV's
 - `.claude-plugin/marketplace.json` makes the repository a Claude Code
   marketplace, `ddev-agent-skills`, that lists the plugins in `plugins/`.
 - Each skill is `plugins/ddev/skills/<name>/SKILL.md`, invoked as
-  `/ddev:<name>`, with its scripts in the same directory.
+  `/ddev:<name>`, with its scripts in the same directory. A skill can use
+  another skill's script as `<skill dir>/../<other>/script.sh`, because the
+  plugin installs them together, such as the review skill's Docker lock.
 - `plugin.json` has no `version` on purpose: installs update to the latest
   commit. Don't add one.
 
