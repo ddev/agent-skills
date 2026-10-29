@@ -6,6 +6,7 @@ Skills for DDEV maintainers working with coding agents.
 
 | Skill | What it does |
 |---|---|
+| [`/ddev:commit`](plugins/ddev/skills/commit/SKILL.md) | Writes a commit message that doubles as the PR description, runs the repository's checks, and commits locally; later it keeps the PR title and body in sync with the branch. Ask "make a branch and commit", or run `/ddev:commit`. Needs bash and git, plus a signed-in [gh](https://cli.github.com/) for PRs and issues. |
 | [`/ddev:review`](plugins/ddev/skills/review/SKILL.md) | Reviews a PR, branch or commit in a DDEV repository: runs it against a baseline build, reports evidence and gaps, and drafts a pending GitHub review. Ask "let's review 1234", or run `/ddev:review 1234`. Needs bash, git, a signed-in [gh](https://cli.github.com/), and Docker with DDEV, on Linux or macOS. On Windows, use WSL2. |
 
 ## Install in Claude Code
