@@ -36,4 +36,5 @@ updates it. Copying the folder works too, but then you update it by hand.
 ## Add a skill
 
 Create `plugins/ddev/skills/<name>/SKILL.md`. It becomes `/ddev:<name>`.
+Add a row for it to the table under [Skills](#skills), the one list of skills.
 [AGENTS.md](AGENTS.md) has the conventions and the checks to run before you push.
