@@ -1,0 +1,7 @@
+{
+  "name": "ddev",
+  "displayName": "DDEV",
+  "description": "Skills for DDEV maintainers",
+  "author": { "name": "DDEV" },
+  "license": "Apache-2.0"
+}
