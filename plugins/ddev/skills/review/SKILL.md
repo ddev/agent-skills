@@ -1,12 +1,19 @@
 ---
 name: review
-description: Review pull requests, local branches, individual commits, and follow-up changes in DDEV ecosystem repositories. Compare behavior with a baseline build, report evidence and testing gaps, and draft review comments the user posts under their own name, as a pending review only when asked. Use when the user says "let's review [PR]", "any bugs, problems? are you happy?", "review again", "happy now?", "review the current branch / last commit", or asks what to write as a review comment.
+description: Review pull requests, local branches, individual commits, and follow-up changes in DDEV repositories, meaning those with a git remote under github.com/ddev, forks of them, and DDEV add-ons. Compare behavior with a baseline build, report evidence and testing gaps, and draft review comments the user posts under their own name, as a pending review only when asked. Use only in such a repository, when the user says "let's review [PR]", "any bugs, problems? are you happy?", "review again", "happy now?", "review the current branch / last commit", or asks what to write as a review comment. Not for other repositories.
 ---
 
 # DDEV review
 
 Every review answers **"are you happy with it?"** with evidence you collected
 yourself, by running the changed behavior when feasible.
+
+This skill is only for DDEV repositories: one with a remote under
+`github.com/ddev/`, a fork of one, or a DDEV add-on with an `install.yaml` at
+the top level. Check `git remote -v` first. A fork with no `ddev` remote
+prints `ddev` for `gh repo view --json parent --jq .parent.owner.login`. In
+any other repository, tell the user that `/ddev:review` doesn't apply there,
+and review without it.
 
 ## Modes
 
