@@ -31,9 +31,11 @@ claude plugin update ddev@ddev-agent-skills
 ## Use with other agents
 
 Each skill is a folder with a `SKILL.md`, the [Agent Skills](https://agentskills.io) format.
-For Codex or another agent that reads it, symlink the skill folder from a
-clone of this repository into that agent's skills directory, so `git pull`
-updates it. Copying the folder works too, but then you update it by hand.
+For Codex or another agent that reads it, symlink each folder in
+`plugins/ddev/skills` from a clone of this repository into that agent's
+skills directory, so `git pull` updates them. Link all of them, because the
+skills run each other's scripts. Copying the folders works too, but then you
+update them by hand.
 
 ## Add a skill
 

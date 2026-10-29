@@ -21,7 +21,8 @@ Read the repository's `AGENTS.md` first for how to run a single test.
 ## 1. Get the log
 
 Pass the run, build or job URL to the script. Without a job, it takes every
-failed job:
+failed job of the latest attempt, or of the attempt an `/attempts/N` URL
+names:
 
 ```bash
 <skill dir>/failed-job.sh https://github.com/ddev/ddev/actions/runs/R/job/J
@@ -32,7 +33,9 @@ It saves each log under `~/tmp/ci-<repo or pipeline>-<run>/`, prints its
 first error lines, and shows the job's history:
 
 - **GitHub Actions:** the same job in the workflow's last 15 runs on any
-  branch. "attempt N" on a success means it passed only after a rerun.
+  branch. "attempt N" on a success means it passed only after a rerun. It
+  also prints the job's failure annotations, which explain a job with no
+  log, such as one whose runner was lost.
 - **Buildkite:** the pipeline's commit status on the last 15 commits of the
   default branch. DDEV's pipelines, such as the macOS and Windows tests, are
   public, so this needs no Buildkite token. It needs `jq`.
@@ -84,9 +87,9 @@ is long.
 
 A failing PR from outside the DDEV team runs its code on this machine. When
 its author isn't `OWNER`, `MEMBER` or `COLLABORATOR`
-(`gh pr view N --json authorAssociation`), read its changes to the Makefile,
-scripts, Dockerfiles, tests and CI first, and ask before running anything
-that looks wrong.
+(`gh api 'repos/{owner}/{repo}/pulls/N' --jq .author_association`), read
+its changes to the Makefile, scripts, Dockerfiles, tests and CI first, and
+ask before running anything that looks wrong.
 
 1. Run only the failing test, the way CI runs it. In ddev/ddev, use the
    single-test commands in `AGENTS.md`. In an add-on, run
@@ -96,9 +99,11 @@ that looks wrong.
    usually matches CI, so don't build a replica environment without asking.
    Other sessions may use Docker at the same time, so take the lock that
    `/ddev:review` uses before tests that start containers, and release it
-   when they finish:
-   `<skill dir>/../review/review-lock.sh acquire ci-<run>` and
-   `release ci-<run>`.
+   when they finish. Use the name of the log directory as the label:
+   `<skill dir>/../review/review-lock.sh acquire ci-<repo or pipeline>-<run>`
+   and `release` with the same label. With the lock held, run
+   `<skill dir>/../review/poweroff-others.sh <context>`, because other local
+   engines running DDEV take the same ports.
 3. Fix the cause once. Search for the same pattern in other tests, and in
    other official add-ons for an add-on, and reuse an existing helper, such
    as one for Docker and Podman differences, before you add one.
