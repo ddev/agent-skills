@@ -1,0 +1,12 @@
+{
+  "name": "ddev-agent-skills",
+  "description": "Agent skills for DDEV maintainers",
+  "owner": { "name": "DDEV" },
+  "plugins": [
+    {
+      "name": "ddev",
+      "source": "./plugins/ddev",
+      "description": "Skills for DDEV maintainers"
+    }
+  ]
+}
