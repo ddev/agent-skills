@@ -84,11 +84,12 @@ variables don't carry over between commands, so write them to a file and
 source it in every command that runs ddev or Docker:
 
 ```bash
-cat > "$review_dir/env" <<EOF
+cat > "$review_dir/review.env" <<EOF
 unset DOCKER_HOST
 export DOCKER_CONTEXT=$(docker context show)
 export DDEV_XDG_CONFIG_HOME=$review_dir/xdg
 EOF
+source /home/<user>/tmp/review-N.XXXXXX/review.env   # in each later command
 ```
 
 Test another engine only for the paths that need it, with
