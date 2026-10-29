@@ -2,10 +2,16 @@
 
 Skills for DDEV maintainers working with coding agents.
 
+## Skills
+
+| Skill | What it does |
+|---|---|
+| [`/ddev:review`](plugins/ddev/skills/review/SKILL.md) | Reviews a PR, branch or commit in a DDEV repository: runs it against a baseline build, reports evidence and gaps, and drafts a pending GitHub review. Ask "let's review 1234", or run `/ddev:review 1234`. Needs bash, git, a signed-in [gh](https://cli.github.com/), and Docker with DDEV, on Linux or macOS. On Windows, use WSL2. |
+
 ## Install in Claude Code
 
 ```bash
-claude plugin install ddev@ddev-agent-skills --marketplace ddev/agent-skills
+claude plugin install ddev --marketplace ddev/agent-skills
 ```
 
 ## Update
