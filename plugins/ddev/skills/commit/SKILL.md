@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Write, amend, or reword a commit message, a PR title and description, or an issue in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on), run the repository's checks, and commit locally. Use only in such a repository, when the user says "commit", "make a branch and commit", "amend", "squash into one commit", "rename the commit", "good commit name?", "update the PR body", "the commit body is too long", or asks to draft an issue. Not for other repositories.
+description: Write, amend, or reword a commit message, a PR title and description, or an issue in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on), run the repository's checks, and commit locally. Use only in such a repository, when the user says "commit", "make a branch and commit", "amend", "squash into one commit", "rename the commit", "good commit name?", "open a PR", "update the PR body", "update the PR description", "the commit body is too long", or asks to draft an issue. Not for other repositories.
 ---
 
 # DDEV commit
@@ -28,8 +28,13 @@ wins:
 - `.github/PULL_REQUEST_TEMPLATE.md`, or the
   [organization template](https://raw.githubusercontent.com/ddev/.github/main/PULL_REQUEST_TEMPLATE.md)
   when the repository has none.
-- For an issue, the form under `.github/ISSUE_TEMPLATE/`. Its field labels
-  become the headings.
+- For an issue, the form under `.github/ISSUE_TEMPLATE/`, or the
+  organization's
+  [bug report](https://raw.githubusercontent.com/ddev/.github/main/ISSUE_TEMPLATE/bug_report.yml)
+  and
+  [feature request](https://raw.githubusercontent.com/ddev/.github/main/ISSUE_TEMPLATE/feature_request.yml)
+  forms when the repository has none. The chosen form's field labels become
+  the headings.
 
 If the branch already has an open PR, start from its current title and body:
 `gh pr view --json number,title,body`.
@@ -49,8 +54,8 @@ commit on the current branch.
 ## 3. Write the body
 
 Use the template's sections in order, without its HTML comments. Write Short
-Summary (TL;DR) last. Drop any other section, heading included, that has
-nothing to say.
+Summary (TL;DR) last, as one or two sentences: what changed and why. Drop any
+other section, heading included, that has nothing to say.
 
 - **Describe the result against the base branch,** not the session that
   produced it. Leave out approaches you tried and dropped. Never write
@@ -79,9 +84,20 @@ Start with how the reviewer gets the change:
 
 | Repository | How the reviewer gets the change |
 | --- | --- |
-| ddev/ddev | `ddev utility download-ddev --pr N`, then `export PATH="$HOME/tmp/ddev-download-ddev/pr-N:$PATH"`. For docs, link the changed page in `https://ddev--N.org.readthedocs.build/en/N/` with its path and anchor, and point to the steps there instead of repeating them. |
+| ddev/ddev | `ddev utility download-ddev --pr N`, which needs no Go toolchain, then `export PATH="$HOME/tmp/ddev-download-ddev/pr-N:$PATH"`. For docs, link the changed page in `https://ddev--N.org.readthedocs.build/en/N/` with its path and anchor, and point to the steps there instead of repeating them. |
 | An add-on | `ddev add-on get <owner>/<repo> --pr N`. When it needs unreleased DDEV, first `ddev utility download-ddev --head` and `export PATH="$HOME/tmp/ddev-download-ddev/main:$PATH"`. |
 | Other repositories | The preview or install steps in the repository's notes. |
+
+For example, in ddev/ddev:
+
+```bash
+ddev utility download-ddev --pr 8820
+export PATH="$HOME/tmp/ddev-download-ddev/pr-8820:$PATH"
+ddev config --project-type=drupal11 --docroot=web
+ddev start
+ddev snapshot --list
+# Expect the size and DB version columns added by this PR
+```
 
 Use the PR's number. Before the PR exists, predict it, so the instructions
 work as soon as it opens:
@@ -113,13 +129,19 @@ from [ASD-STE100](https://en.wikipedia.org/wiki/Simplified_Technical_English):
 - One name for one thing throughout
 - One action per step in Manual Testing Instructions
 - A "why" in its own clause, not in a parenthetical
+- One connective per sentence, such as so, which, or because. None reads
+  choppy, and more read as dense prose.
+
+Then read it aloud, as if to a teammate.
 
 End with the attribution from the organization `AGENTS.md`. The PR
 description is the same text without the `Co-Authored-By` trailer.
 
 ## 4. Check the message
 
-Write the message to a file under `~/tmp`, then run:
+Write the message to a file under `~/tmp`. Never pass a multiline message
+inline, such as `git commit -m "$(cat <<'EOF' ...)"` or
+`gh pr create --body "$(...)"`, because the shell can mangle it. Then run:
 
 ```bash
 <skill dir>/check-message.sh <file>          # a commit message
@@ -151,8 +173,12 @@ Check each earlier claim against the current diff, and remove what no
 longer holds. When the user wants one commit, fold fixes into it instead of
 adding commits.
 
-Report the commit title, the branch, the unpushed commits, and any fixes you
-staged.
+If the branch has an open PR, re-read its body against the whole branch.
+When this commit changes behavior or makes a claim in it untrue, write the
+new body to a file now, and apply it as step 6 says after the user pushes.
+
+Report the commit title, the branch, the unpushed commits, any fixes you
+staged, and whether the PR body needs that update.
 
 ## 6. Push, PR, and issue
 
@@ -167,5 +193,6 @@ the repository allows it. After the user pushes:
   behavior or made a claim untrue. Replace a predicted PR number or preview
   link that turned out wrong.
 
-Draft an issue the same way and show the file. Create it with
+Draft an issue the same way, and give each alternative one line: what it
+is, and why it lost. Show the file. Create it with
 `gh issue create --body-file <file>` only when the user asks.
