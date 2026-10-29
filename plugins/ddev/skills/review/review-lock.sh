@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Serialize Docker work between review sessions on this machine.
+# Serialize Docker work between agent sessions on this machine, such as
+# reviews, /ddev:work and /ddev:ci-failure.
 #   review-lock.sh acquire <label>  wait for the lock, then hold it until
 #                                   release, or for REVIEW_LOCK_MAX seconds
 #                                   (3h) if the session is lost

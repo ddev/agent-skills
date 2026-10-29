@@ -49,7 +49,9 @@ git diff "<baseRefOid>...<headRefOid>"
 
 Make another request only when you need it:
 
-- a failed job's log: `gh run view --job <id> --log-failed`
+- a failed check: `<skill dir>/../ci-failure/failed-job.sh <its URL>`, for
+  GitHub Actions or Buildkite, which also shows whether the job fails on
+  other branches too
 - an issue or PR the body mentions without closing it:
   `gh issue view M --comments`
 - the rest of a list marked `!! only 100 of N`
@@ -94,9 +96,9 @@ EOF
 Test another engine only for the paths that need it, with
 `DOCKER_CONTEXT=<name>` on those commands.
 
-Other sessions may review at the same time. Before anything that starts
-containers, builds images, runs Docker tests, or powers off DDEV, take the
-lock. `review-lock.sh` is in this skill's directory. Run it in the
+Other sessions may review, work or test at the same time. Before anything
+that starts containers, builds images, runs Docker tests, or powers off
+DDEV, take the lock. `review-lock.sh` is in this skill's directory. Run it in the
 background: it returns once the lock is yours. If it prints `waiting for`,
 tell the user which review holds the lock. A lock its session never
 released expires after 3 hours. To free one sooner, run
