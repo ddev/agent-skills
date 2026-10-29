@@ -39,7 +39,6 @@ function check_words(s,    w) {
 BEGIN {
   types = "^(build|chore|ci|docs|feat|fix|perf|refactor|style|test)(\\([^)]+\\))?!?: "
   words = "comprehensive|seamless(ly)?|genuine(ly)?|honest(ly)?|truly|really|perfect(ly)?|robust|powerful|effortless(ly)?|production-ready|tremendous(ly)?|dramatically|revolutionary|delve|elevate|unleash"
-  first = (mode == "commit") ? 3 : 1
 }
 
 { sub(/\r$/, "") }
@@ -72,7 +71,7 @@ mode == "commit" && NR == 2 {
 fence { next }
 
 {
-  if ($0 != "" && prev != "" && NR > first && !starts_block($0) && !is_heading(prev) \
+  if ($0 != "" && prev != "" && !starts_block($0) && !is_heading(prev) \
       && !(is_trailer($0) && is_trailer(prev)))
     report(NR, "line break inside a paragraph; GitHub shows it as <br>")
 

@@ -58,13 +58,15 @@ Before you plan, list open PRs that change the same files, so you can
 mention a conflict now instead of after review:
 
 ```bash
-git diff --name-only "<remote>/<base>...HEAD" > "$work_dir/files"
+# Committed, uncommitted and new files since the branch left the base.
+{ git diff --name-only "$(git merge-base <remote>/<base> HEAD)"
+  git ls-files --others --exclude-standard; } > "$work_dir/files"
 gh pr list --state open --limit 100 --json number,title,files \
   --jq '.[] | .number as $n | .title as $t | .files[] | "#\($n)\t\(.path)\t\($t)"' \
-  | awk -F'\t' 'NR == FNR { f[$0]; next } $2 in f' "$work_dir/files" -
+  | awk -F'\t' 'FILENAME == ARGV[1] { f[$0]; next } $2 in f' "$work_dir/files" -
 ```
 
-On a new branch with no changes yet, run it after step 4 instead.
+On a new branch with no changes yet, run it again after step 4.
 
 ## 3. Plan, then wait
 
@@ -104,9 +106,11 @@ Reproduce the problem first, then show the change fixes it:
 
 1. In a new project under `~/tmp`, with a real project type, run the user's
    scenario on the baseline. It should show the bug or the old behavior. Get
-   the builds and the Docker lock as `/ddev:review` step 2 says, with
-   `<skill dir>/../review/review-lock.sh acquire work-N`. Release the lock
-   when your Docker runs finish, before you report or wait for the user.
+   the builds, the env file and the Docker lock as step 2 of
+   `<skill dir>/../review/SKILL.md` says, with `$work_dir` for `$review_dir`
+   and `<skill dir>/../review/review-lock.sh acquire work-<repo>-N`. Release
+   the lock when your Docker runs finish, before you report or wait for the
+   user.
 2. Run the same steps on your build. Record the commands and their output;
    they become the PR's Manual Testing Instructions.
 3. Cover each path the change affects, such as another database, Podman, or
@@ -143,4 +147,5 @@ Say whether the change fully fixes each linked issue, so the PR can use
   touches: what changed and the PR link. Leave out the AI attribution line
   unless the user wants it. Post only when the user asks.
 - Remove the test projects with `ddev delete -Oy <name>` under the lock,
-  release it, and delete `$work_dir`. List what you removed.
+  release it, remove the worktrees you added with `git worktree remove`, and
+  delete `$work_dir`. List what you removed.

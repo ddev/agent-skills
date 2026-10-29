@@ -155,14 +155,14 @@ what it reports. Then reread each claim against the diff and your runs.
 
 ## 5. Run the checks and commit
 
-1. Run the lint and test commands that the repository's `AGENTS.md` names
+1. Read `git diff --cached` for comments that restate the code, and cut them.
+2. Run the lint and test commands that the repository's `AGENTS.md` names
    for the changed files. Read the full output, without `tail`, `head`, or
    `grep`.
-2. Fix every failure, including failures in changes you didn't write, and
+3. Fix every failure, including failures in changes you didn't write, and
    stage the fixes. Run the checks again. Commit only after a passing run,
    with no file changed since. This applies to an amend, squash, or reword
    too.
-3. Read `git diff --cached` for comments that restate the code, and cut them.
 4. Commit with `git commit -F <file>` or `git commit --amend -F <file>`.
 
 When the user asks to commit what is staged, commit it without asking why.

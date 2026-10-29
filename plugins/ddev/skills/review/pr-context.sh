@@ -31,7 +31,7 @@ query($owner: String!, $name: String!, $n: Int!) {
       comments(first: 100) { totalCount nodes { author { login } createdAt body } }
       reviews(first: 100) { totalCount nodes { id author { login } state submittedAt commit { oid } body } }
       reviewThreads(first: 100) { totalCount nodes { isResolved isOutdated path line
-        comments(first: 50) { nodes { author { login } createdAt body } } } }
+        comments(first: 50) { totalCount nodes { author { login } createdAt body } } } }
     }
   }
 }' --jq '
@@ -39,12 +39,12 @@ def more(c; what): if c.totalCount > (c.nodes | length) then "!! only \(c.nodes 
 def who: .author.login // "ghost";
 .data.viewer.login as $me
 | .data.repository.pullRequest as $p
-| "# #\($p.number) \($p.title)\n\($p.url)\nstate=\($p.state) draft=\($p.isDraft) author=\($p.author.login) association=\($p.authorAssociation) viewer=\($me)\nbase=\($p.baseRefName) \($p.baseRefOid)\nhead=\($p.headRepository.nameWithOwner // "?"):\($p.headRefName) \($p.headRefOid)\n\n## Body\n\($p.body)\n"
+| "# #\($p.number) \($p.title)\n\($p.url)\nstate=\($p.state) draft=\($p.isDraft) author=\($p | who) association=\($p.authorAssociation) viewer=\($me)\nbase=\($p.baseRefName) \($p.baseRefOid)\nhead=\($p.headRepository.nameWithOwner // "?"):\($p.headRefName) \($p.headRefOid)\n\n## Body\n\($p.body)\n"
 , "## Commits\n" + more($p.commits; "commits") + ([$p.commits.nodes[].commit | "- \(.oid[0:9]) \(.messageHeadline)" + (if .messageBody != "" then "\n\(.messageBody | gsub("\n"; "\n  ") | "  " + .)" else "" end)] | join("\n")) + "\n"
 , "## Files\n" + more($p.files; "files") + ([$p.files.nodes[] | "- \(.path) +\(.additions) -\(.deletions)"] | join("\n")) + "\n"
 , "## Checks: \($p.head.nodes[0].commit.statusCheckRollup.state // "none")\n" + ([$p.head.nodes[0].commit.statusCheckRollup.contexts.nodes[]? | select((.conclusion // .state // .status) as $s | $s != "SUCCESS" and $s != "SKIPPED" and $s != "NEUTRAL") | "- \(.name // .context): \(.conclusion // .state // .status) \(.detailsUrl // .targetUrl)"] | join("\n")) + "\n"
 , ($p.closingIssuesReferences.nodes[] | "## Issue #\(.number) \(.title)\n\(.url)\n\(.body)\n" + more(.comments; "comments") + ([.comments.nodes[] | "--- \(who) \(.createdAt)\n\(.body)"] | join("\n")) + "\n")
 , "## PR comments\n" + more($p.comments; "comments") + ([$p.comments.nodes[] | select(.body | startswith("<!-- bot:") | not) | "--- \(who) \(.createdAt)\n\(.body)"] | join("\n")) + "\n"
 , "## Reviews\n" + more($p.reviews; "reviews") + ([$p.reviews.nodes[] | "--- \(who) \(.state) id=\(.id) commit=\(.commit.oid[0:9]) \(.submittedAt // "")\n\(.body)"] | join("\n")) + "\n"
-, "## Threads\n" + more($p.reviewThreads; "threads") + ([$p.reviewThreads.nodes[] | "--- \(.path):\(.line // "?") resolved=\(.isResolved) outdated=\(.isOutdated)\n" + ([.comments.nodes[] | "  [\(who)] \(.body | gsub("\n"; "\n  "))"] | join("\n"))] | join("\n"))
+, "## Threads\n" + more($p.reviewThreads; "threads") + ([$p.reviewThreads.nodes[] | "--- \(.path):\(.line // "?") resolved=\(.isResolved) outdated=\(.isOutdated)\n" + more(.comments; "comments") + ([.comments.nodes[] | "  [\(who)] \(.body | gsub("\n"; "\n  "))"] | join("\n"))] | join("\n"))
 '
