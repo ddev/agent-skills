@@ -44,3 +44,24 @@ claude plugin validate .
 shellcheck plugins/*/skills/*/*.sh
 claude --plugin-dir ./plugins/ddev
 ```
+
+### When a skill should load
+
+When you change a skill's `description` or its repository check, test which
+requests load it. Make two throwaway repositories in `~/tmp`, one with a
+`github.com/ddev/` remote and one with another remote. In each, run the
+skill's trigger phrases headless against this checkout, with the installed
+copy turned off. The command prints the skills that loaded:
+
+```bash
+plugin=<this checkout>/plugins/ddev
+claude -p "let's review last commit" --plugin-dir "$plugin" \
+  --settings '{"enabledPlugins":{"ddev@ddev-agent-skills":false}}' \
+  --allowedTools "Bash(git *)" --max-turns 4 --output-format stream-json --verbose \
+  | jq -r 'select(.type=="assistant") | .message.content[]
+      | select(.type=="tool_use" and .name=="Skill") | .input.skill'
+```
+
+The skill should load in the DDEV repository. In the other one it should not
+load, or should stop after its repository check. Loading is not
+deterministic, so run each case more than once before you trust a result.
