@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # List the issues and PRs that mention an issue or PR, with their state, so
-# the related work can be read before starting. Usage: mentions.sh N [owner/repo]
+# related issues and earlier attempts can be read. Usage: mentions.sh N [owner/repo]
 # shellcheck disable=SC2016 # the $ in the GraphQL query and jq filter is not shell
 set -euo pipefail
 
