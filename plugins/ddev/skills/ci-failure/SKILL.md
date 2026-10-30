@@ -1,6 +1,6 @@
 ---
 name: ci-failure
-description: Diagnose a failing or intermittent CI job in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on) from a GitHub Actions URL, a Buildkite URL, or a downloaded log. Find the first real error, decide whether it is a regression, intermittent, platform-specific, or upstream, and fix the cause. Use only in such a repository or for a run under github.com/ddev, when the user gives a failing run, or says "this test fails", "is it intermittent or not?", "fails periodically", "works locally but fails in CI", "see failed test in [PR], fix it", or "let's fix it once and for all". Not for other repositories.
+description: Diagnose a failing or intermittent CI job in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on) from a GitHub Actions URL, a Buildkite URL, or a downloaded log. Find the first real error, decide whether it is a regression, intermittent, platform-specific, or upstream, and fix the cause. Use only in such a repository or for a run under github.com/ddev, when the user gives a failing run, or says "this test fails", "is it intermittent?", "works locally but fails in CI", or "fix the failing test in [PR]". Not for other repositories.
 ---
 
 # DDEV CI failure
@@ -95,15 +95,17 @@ ask before running anything that looks wrong.
    single-test commands in `AGENTS.md`. In an add-on, run
    `bats ./tests/test.bats --filter '<test name>'`. Never run the whole
    suite to check one test.
-2. Use the same engine and versions as the failing job. The user's machine
-   usually matches CI, so don't build a replica environment without asking.
-   Other sessions may use Docker at the same time, so take the lock that
-   `/ddev:review` uses before tests that start containers, and release it
-   when they finish. Use the name of the log directory as the label:
+2. Use the same engine and versions as the failing job. If this machine
+   doesn't match it, such as a macOS job on a Linux machine, say so, and
+   ask before you build a replica environment. Other sessions may use
+   Docker at the same time, so take the lock that `/ddev:review` uses
+   before tests that start containers, and release it when they finish.
+   Use the name of the log directory as the label:
    `<skill dir>/../review/review-lock.sh acquire ci-<repo or pipeline>-<run>`
-   and `release` with the same label. With the lock held, run
-   `<skill dir>/../review/poweroff-others.sh <context>`, because other local
-   engines running DDEV take the same ports.
+   and `release` with the same label. Other local engines running DDEV take
+   the same ports. Before the lock, list them with
+   `<skill dir>/../review/poweroff-others.sh <context>`, and ask before you
+   run it again with `--poweroff` under the lock.
 3. Fix the cause once. Search for the same pattern in other tests, and in
    other official add-ons for an add-on, and reuse an existing helper, such
    as one for Docker and Podman differences, before you add one.

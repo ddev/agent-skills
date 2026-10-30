@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Write, amend, or reword a commit message, a PR title and description, or an issue in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on), run the repository's checks, and commit locally. Use only in such a repository, when the user says "commit", "make a branch and commit", "amend", "squash into one commit", "rename the commit", "good commit name?", "open a PR", "update the PR body", "update the PR description", "the commit body is too long", or asks to draft an issue. Not for other repositories.
+description: Write, amend, or reword a commit message, a PR title and description, or an issue in a DDEV repository (a git remote under github.com/ddev, a fork of one, or a DDEV add-on), run the repository's checks, and commit locally. Use only in such a repository, when the user says "commit", "make a branch and commit", "amend", "squash into one commit", "reword the commit message", "open a PR", "update the PR description", or asks to draft an issue. Not for other repositories.
 ---
 
 # DDEV commit
@@ -131,8 +131,6 @@ from [ASD-STE100](https://en.wikipedia.org/wiki/Simplified_Technical_English):
 - A "why" in its own clause, not in a parenthetical
 - One connective per sentence, such as so, which, or because. None reads
   choppy, and more read as dense prose.
-
-Then read it aloud, as if to a teammate.
 
 End with the attribution from the organization `AGENTS.md`. The PR
 description is the same text without the `Co-Authored-By` trailer.
