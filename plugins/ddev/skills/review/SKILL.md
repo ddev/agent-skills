@@ -55,6 +55,9 @@ Make another request only when you need it:
   other branches too
 - an issue or PR the body mentions without closing it:
   `gh issue view M --comments`
+- every issue and PR, open or closed, in any repository, that mentions this
+  PR or an issue it closes, such as an earlier attempt at the same fix:
+  `<skill dir>/mentions.sh N` (add owner/repo outside the repo)
 - the rest of a list marked `!! only 100 of N`
 
 ### Subagents
