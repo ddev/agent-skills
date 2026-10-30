@@ -1,12 +1,12 @@
 ---
 name: review
-description: Review pull requests, local branches, individual commits, and follow-up changes in DDEV repositories, meaning those with a git remote under github.com/ddev, forks of them, and DDEV add-ons. Compare behavior with a baseline build, report evidence and testing gaps, and draft review comments the user posts under their own name, as a pending review only when asked. Use only in such a repository, when the user says "let's review [PR]", "any bugs, problems? are you happy?", "review again", "happy now?", "review the current branch / last commit", or asks what to write as a review comment. Not for other repositories.
+description: Review pull requests, local branches, individual commits, and follow-up changes in DDEV repositories, meaning those with a git remote under github.com/ddev, forks of them, and DDEV add-ons. Compare behavior with a baseline build, report evidence and testing gaps, and draft review comments the user posts under their own name, as a pending review only when asked. Use only in such a repository, when the user says "let's review [PR]", "review again", "review the current branch / last commit", or asks what to write as a review comment. Not for other repositories.
 ---
 
 # DDEV review
 
-Every review answers **"are you happy with it?"** with evidence you collected
-yourself, by running the changed behavior when feasible.
+Every review ends in a verdict backed by evidence you collected yourself, by
+running the changed behavior when feasible.
 
 This skill is only for DDEV repositories: one with a remote under
 `github.com/ddev/`, a fork of one, or a DDEV add-on with an `install.yaml` at
@@ -18,14 +18,17 @@ and review without it.
 ## Modes
 
 - **PR** (number or URL): all the steps below.
-- **Re-review** ("review again", "happy now?", or the user already reviewed
-  it): check that each earlier point was fixed or answered, then review and
-  retest the diff from the last reviewed commit (the review's `commit=`) to
-  the head. If that commit is unknown, say so and review the full diff.
+- **Re-review** ("review again", or the user already reviewed it): check
+  that each earlier point was fixed or answered, then review and retest the
+  diff from the last reviewed commit (the review's `commit=`) to the head.
+  If that commit is unknown, say so and review the full diff.
 - **Local branch or last commit:** use the local build as the candidate.
   Compare a branch with its intended target; compare the last commit with its
   first parent unless the user gives another base. Check that the commit body
   describes the resulting behavior, not the steps that led to it.
+- **Read only** (the user asks only to read the diff, or for a quick look):
+  steps 1 and 3, without builds or Docker. Say in the answer that nothing
+  ran.
 - **Review comments on the user's own PR:** check each comment against the
   current code, fix the ones that hold up, and draft the replies. Resolve
   threads only when asked.
@@ -120,14 +123,17 @@ review back to the user. Take it again if you need Docker later.
 ```
 
 Local engines, such as Docker and Podman, or OrbStack and Docker Desktop,
-compete for the same ports. With the lock held, and before starting ddev on
-an engine, power off DDEV on every other local engine that is running it.
-Run this with the user's own ddev on `PATH`, not a review build, and tell the
-user what it stopped:
+compete for the same ports. Before you take the lock, list the other local
+engines that run DDEV. Run this with the user's own ddev on `PATH`, not a
+review build:
 
 ```bash
 <skill dir>/poweroff-others.sh <context>   # the one you are about to use
 ```
+
+If it lists any, ask the user before you power them off, because one may run
+a project they are working in. Then, with the lock held, run it again with
+`--poweroff` before you start ddev, and tell the user what it stopped.
 
 ### Builds
 
@@ -220,8 +226,9 @@ impact and evidence, and rank it by how many users are likely to hit it.
 
 ## 4. Answer the user
 
-Open with "I'm happy with it", "Not yet", or "I can't conclude yet", plus
-one line why. Use the last when missing verification prevents a verdict. Then:
+Open with a verdict, "Ready to merge", "Not yet", or "Can't conclude yet",
+plus one line why. Use the last when missing verification prevents a verdict.
+Then:
 
 1. **What I checked:** the head and baseline revisions, and evidence for
    each claim: a `file:line` link, or the command run on both builds and how
@@ -250,7 +257,7 @@ it, not like AI output.
 - **Plain:** short sentences. Avoid:
     - headings or bold lead-ins
     - restating the PR or a praise paragraph
-    - vague hedging, and em dashes; state any concrete uncertainty
+    - vague hedging; state any concrete uncertainty
     - the organization's list of words, which the check below reports
 - **Suggest, don't lecture:** "Maybe show only the names?" A small code
   suggestion beats a paragraph.
@@ -265,7 +272,7 @@ it, not like AI output.
   [Claude Code](https://claude.ai/code) or
   [Codex](https://openai.com/codex/) as appropriate.
 
-A draft the user cut from five paragraphs to this:
+For example:
 
 > This prints `web-environment` values, which the full listing hides since
 > #6002 because people keep tokens there (our Platform.sh, Acquia and
@@ -330,6 +337,6 @@ prune.
 - Docker images and containers this review created, unless other projects
   use them
 
-If you're happy with the PR, clean up without asking and list what you
+If the verdict is "Ready to merge", clean up without asking and list what you
 removed. If not, list what's left and ask before deleting anything. Leave the
 user's checked-out branch as it was.

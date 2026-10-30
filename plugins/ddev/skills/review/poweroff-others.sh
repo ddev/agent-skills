@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
-# Power off DDEV on every local Docker context except the one a review is
-# about to use: local engines compete for the same ports.
-# Usage: poweroff-others.sh <context>
-# Run it with the user's own ddev on PATH, not a review build.
+# List, or power off, DDEV on every local Docker context except the one a
+# review is about to use: local engines compete for the same ports.
+# Usage: poweroff-others.sh [--poweroff] <context>
+# Without --poweroff it only lists them. Run it with the user's own ddev on
+# PATH, not a review build.
 set -euo pipefail
 
-keep=${1:?usage: poweroff-others.sh <context>}
+poweroff=
+if [ "${1:-}" = --poweroff ]; then poweroff=1; shift; fi
+keep=${1:?usage: poweroff-others.sh [--poweroff] <context>}
 # DOCKER_HOST overrides DOCKER_CONTEXT, and the review's config isn't the user's.
 unset DOCKER_HOST DDEV_XDG_CONFIG_HOME
 
@@ -23,6 +26,7 @@ docker context ls --format '{{.Name}} {{.DockerEndpoint}}' |
     [ "$name" != "$keep" ] || continue
     [ -z "$keep_id" ] || [ "$(engine_id "$name")" != "$keep_id" ] || continue
     [ -n "$(DOCKER_CONTEXT=$name quick docker ps -q --filter label=com.ddev.platform=ddev 2>/dev/null)" ] || continue
+    if [ -z "$poweroff" ]; then echo "ddev is running on $name"; continue; fi
     echo "powering off ddev on $name"
     DOCKER_CONTEXT=$name ddev poweroff </dev/null
   done
