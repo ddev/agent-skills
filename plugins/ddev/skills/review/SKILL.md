@@ -333,6 +333,8 @@ prune.
   lock held, before deleting their directories
 - the lock, if you still hold it
 - worktrees: `git worktree remove "$review_dir/pr"` and `"$review_dir/baseline"`
+- a Mutagen daemon running from `$review_dir`, or later syncs fail: `kill`
+  the PID from `lsof -a -d txt -c mutagen | grep "$review_dir"`
 - the rest of `$review_dir`
 - Docker images and containers this review created, unless other projects
   use them
