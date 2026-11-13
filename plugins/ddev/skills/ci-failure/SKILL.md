@@ -18,6 +18,18 @@ user that `/ddev:ci-failure` doesn't apply there, and diagnose without it.
 
 Read the repository's `AGENTS.md` first for how to run a single test.
 
+The scripts need `jq`, and use two CLIs:
+
+| CLI | Used for | When it is missing or signed out |
+| --- | --- | --- |
+| `gh` | GitHub Actions logs and history, which GitHub serves only to a signed-in client | Install it from <https://cli.github.com>, then `gh auth login` |
+| `bk` | Searching all Buildkite builds, including retried jobs | Install it from <https://github.com/buildkite/cli>, then `bk auth login --org=ddev --token=<token>` with `read_builds` and `read_build_logs`, or `bk auth login --org=ddev` to sign in |
+
+The scripts check both and print what to do. Tell the user which one is
+missing and the command that fixes it, because the user has to run it. Then
+continue with what works. Public Buildkite builds and a log the user
+downloads still give one failure, but not a test's history across CI.
+
 ## 1. Get the log
 
 Pass the run, build or job URL to the script. Without a job, it takes every
@@ -43,7 +55,7 @@ first error lines, and shows the job's history:
   pass, so it can't show how often a test fails.
 
 For a private Buildkite pipeline, the script prints the `bk` commands to use
-instead, after `bk auth login`.
+instead, after `bk auth login --org=ddev --token=<token>`.
 
 **A downloaded log:** `grep -n` for `--- FAIL`, `+++ FAIL` (ddev's Buildkite
 tests rename it), `not ok`, `panic:`, `Error`, and `timed out`, then read
@@ -67,8 +79,8 @@ link, `file:line` and error text, and saves the logs under
 - **Buildkite:** the API leaves a retried job out of its build's `jobs`.
   Only the replacement job's `retry_source.job_id` names it, and the build
   shows as passed. The org's build list has no total, so the script pages
-  until a page comes back empty. It needs `bk auth login` with
-  `read_builds` and `read_build_logs`.
+  until a page comes back empty. It needs an authorized `bk`, as the table
+  above says. Without it, the script searches GitHub only.
 - **GitHub Actions:** a run that passed on a rerun has `run_attempt` above
   1 and shows only its last attempt. The script reads the jobs of every
   attempt through `runs/R/attempts/N/jobs`.

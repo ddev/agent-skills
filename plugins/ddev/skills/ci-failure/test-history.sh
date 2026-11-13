@@ -3,8 +3,9 @@
 # pipelines of an org and all GitHub Actions workflows of a repository,
 # including failed attempts that a retry or rerun hid behind a pass.
 # Usage: test-history.sh TestName YYYY-MM-DD [OWNER/REPO]
-# Buildkite needs an authorized `bk` (read_builds, read_build_logs); without
-# one, only GitHub is searched. Set BK_ORG for an org other than ddev.
+# Buildkite needs an authorized `bk` (read_builds, read_build_logs), and
+# GitHub a signed-in `gh`. A side without one is skipped with a message that
+# says how to fix it. Set BK_ORG for an org other than ddev.
 set -euo pipefail
 
 [ $# -ge 2 ] || { echo "Usage: $0 TestName YYYY-MM-DD [OWNER/REPO]" >&2; exit 2; }
@@ -45,8 +46,13 @@ check_log() { # file, then the fields that describe the job
 }
 
 buildkite() {
-  if ! command -v bk > /dev/null || ! bk api "/pipelines?per_page=1" > /dev/null 2>&1; then
-    echo "Skipping Buildkite: \`bk\` is missing or not authorized. Run \`bk auth login\`." >&2
+  if ! command -v bk > /dev/null; then
+    echo "Skipping Buildkite: the Buildkite CLI \`bk\` is not installed. See https://github.com/buildkite/cli." >&2
+    return 0
+  fi
+  if ! bk api "/pipelines?per_page=1" > /dev/null 2>&1; then
+    echo "Skipping Buildkite: \`bk\` is not authorized for $org. Run \`bk auth login --org=$org --token=<token>\`" >&2
+    echo "with a token that has read_builds and read_build_logs, or \`bk auth login --org=$org\` to sign in." >&2
     return 0
   fi
   # bk api adds /organizations/<org> itself. Page until empty, because the
@@ -76,6 +82,14 @@ buildkite() {
 # A run that passed on a rerun has run_attempt > 1 and shows only its last
 # attempt, so read the jobs of every attempt.
 github() {
+  if ! command -v gh > /dev/null; then
+    echo "Skipping GitHub: the GitHub CLI \`gh\` is not installed. See https://cli.github.com." >&2
+    return 0
+  fi
+  if ! gh auth status > /dev/null 2>&1; then
+    echo "Skipping GitHub: \`gh\` is not signed in. Run \`gh auth login\`." >&2
+    return 0
+  fi
   gh api --paginate "repos/$repo/actions/runs?created=%3E%3D$since&per_page=100" \
     --jq '.workflow_runs[] | select(.conclusion == "failure" or .run_attempt > 1)
       | [.id, .run_attempt, .name, .head_branch, .created_at[0:10], .conclusion // .status] | @tsv' |
