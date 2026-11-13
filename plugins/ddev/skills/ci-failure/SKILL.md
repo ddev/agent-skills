@@ -27,8 +27,9 @@ The scripts need `jq`, and use two CLIs:
 
 The scripts check both and print what to do. Tell the user which one is
 missing and the command that fixes it, because the user has to run it. Then
-continue with what works. Public Buildkite builds and a log the user
-downloads still give one failure, but not a test's history across CI.
+continue with what works. Without `bk`, public Buildkite builds still give
+one failure, and their history by hand, as
+[Every failure of one test](#every-failure-of-one-test) says.
 
 ## 1. Get the log
 
@@ -84,6 +85,20 @@ link, `file:line` and error text, and saves the logs under
 - **GitHub Actions:** a run that passed on a rerun has `run_attempt` above
   1 and shows only its last attempt. The script reads the jobs of every
   attempt through `runs/R/attempts/N/jobs`.
+
+GitHub loses some job logs, mostly of attempts that a rerun replaced, and
+returns 404 for them while its web page still shows them. The script lists
+every log it couldn't download with its link. Open those in a browser, or
+ask the user to, before you say a failure was the only one.
+
+Without `bk`, a public Buildkite pipeline can be read by hand, one pipeline
+at a time. `https://buildkite.com/ddev` lists the pipelines. Build numbers
+are sequential, so walk `https://buildkite.com/ddev/<pipeline>/builds/N.json`
+back to the date. `builds/N/data/jobs` includes a retried job, with
+`passed: false` and `retried_in_job_uuid` set, and
+`https://buildkite.com/organizations/ddev/pipelines/<pipeline>/builds/N/jobs/<job>/download.txt`
+downloads its log. Ask the user to set up `bk` before you walk more than a
+few pipelines this way.
 
 Then group the failures by error, not by test name. One test can fail for
 unrelated reasons, such as a Docker daemon that crashed, or an experimental
