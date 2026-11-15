@@ -13,8 +13,10 @@ failure in a DDEV repository, meaning one with a remote under
 `github.com/ddev/`, a fork of one, or a DDEV add-on with an `install.yaml` at
 the top level. Without such a URL, check `git remote -v` first. A fork with
 no `ddev` remote prints `ddev` for
-`gh repo view --json parent --jq .parent.owner.login`. Otherwise, tell the
-user that `/ddev:ci-failure` doesn't apply there, and diagnose without it.
+`gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`. Otherwise, tell
+the user that `/ddev:ci-failure` doesn't apply there, and diagnose without
+it. If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
+self-hosted sessions, read `<skill dir>/../review/github-rest.md`.
 
 Read the repository's `AGENTS.md` first for how to run a single test.
 

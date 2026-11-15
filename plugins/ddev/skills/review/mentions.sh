@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # List the issues and PRs that mention an issue or PR, with their state, so
-# related issues and earlier attempts can be read. Usage: mentions.sh N [owner/repo]
+# related issues and earlier attempts can be read. Falls back to REST where gh
+# has no GraphQL, as in Claude Code cloud and self-hosted sessions.
+# Usage: mentions.sh N [owner/repo]
 # shellcheck disable=SC2016 # the $ in the GraphQL query and jq filter is not shell
 set -euo pipefail
 
@@ -9,6 +11,7 @@ repo=${2:-'{owner}/{repo}'}
 owner=${repo%%/*}
 name=${repo#*/}
 
+graphql() {
 gh api graphql -F owner="$owner" -F name="$name" -F n="$n" -f query='
 fragment mention on CrossReferencedEvent { willCloseTarget source {
   __typename
@@ -41,3 +44,26 @@ query($owner: String!, $name: String!, $n: Int!) {
       + ": \($s.title)\n  \($s.url)"]
    | unique | if length == 0 then "No mentions." else join("\n") end)
 '
+}
+
+# The same list from the REST timeline, which has no willCloseTarget.
+rest() {
+  gh api "repos/$repo/issues/$n" --jq '"# Mentions of #\(.number) \(.title)\n\(.html_url)"'
+  gh api "repos/$repo/issues/$n/timeline?per_page=100" --jq '
+(if length == 100 then "!! only the first 100 timeline events read\n" else "" end)
++ ([.[] | select(.event == "cross-referenced") | .source.issue | select(. != null)
+    | "- \(.repository.full_name)#\(.number) "
+      + (if .pull_request then "PR" else "issue" end)
+      + (if .pull_request.merged_at then " MERGED" else " \(.state | ascii_upcase)" end)
+      + (if .draft then " draft" else "" end)
+      + (if .state_reason == "duplicate" then " duplicate" else "" end)
+      + ": \(.title)\n  \(.html_url)"]
+   | unique | if length == 0 then "No mentions." else join("\n") end)'
+}
+
+if ! out=$(graphql 2> /dev/null); then
+  echo "(gh api graphql failed; reading through REST)" >&2
+  rest
+  exit
+fi
+printf '%s\n' "$out"
