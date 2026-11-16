@@ -19,11 +19,11 @@ claude plugin install ddev --marketplace ddev/agent-skills
 In Claude Code cloud and self-hosted sessions, `gh` passes on only `gh api` REST
 requests. The scripts fall back to REST there, and
 [`github-rest.md`](plugins/ddev/skills/review/github-rest.md) gives the
-skills REST forms of the other `gh` commands. A plugin installed on your own
-machine isn't in those sessions. A self-hosted runner copies its host config
-directory, `~/.claude` by default, into every session, so skill folders placed
-in its `skills/`, as for other agents below, reach everyone who uses that
-runner.
+skills REST forms of the other `gh` commands.
+
+A plugin installed on your own machine isn't in those sessions. They get the
+plugins and skills of your claude.ai account and organization instead, so add
+this plugin there to use it in a cloud or self-hosted session.
 
 ## Update
 
