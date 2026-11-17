@@ -15,8 +15,9 @@ prints `ddev` for `gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`.
 In any other repository, tell the user that `/ddev:review` doesn't apply
 there, and review without it.
 
-If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
-self-hosted sessions, read `<skill dir>/github-rest.md`.
+In a Claude Code self-hosted runner session, or when `gh` isn't signed in
+or reports that GraphQL isn't available, read `<skill dir>/github-rest.md`
+first. It says when to use the GitHub MCP tools instead of `gh`.
 
 ## Modes
 
@@ -323,7 +324,8 @@ mutation($id: ID!, $body: String!) {
 }'
 ```
 
-Without GraphQL, `<skill dir>/github-rest.md` covers both steps.
+Without GraphQL or a usable `gh`, `<skill dir>/github-rest.md` covers both
+steps.
 
 Then give the user the PR's "Files changed" link to finish the review.
 

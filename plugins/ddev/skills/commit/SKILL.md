@@ -17,9 +17,10 @@ prints `ddev` for `gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`.
 In any other repository, tell the user that `/ddev:commit` doesn't apply
 there, and follow that repository's own conventions instead.
 
-If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
-self-hosted sessions, read `<skill dir>/../review/github-rest.md` for the
-REST forms of the `gh pr` and `gh issue` commands below.
+In a Claude Code self-hosted runner session, or when `gh` isn't signed in
+or reports that GraphQL isn't available, read
+`<skill dir>/../review/github-rest.md` first. It says when to use the GitHub
+MCP tools or REST forms for the `gh pr` and `gh issue` commands below.
 
 ## 1. Read the repository's rules
 

@@ -30,6 +30,17 @@ first_errors() {
     cut -c1-200 | sed 's/^/  /' || echo "  none matched; read the failed step"
 }
 
+# gh exits with status 4 when it has no sign-in, as on a Claude Code
+# self-hosted runner whose workspace nobody signed in.
+no_gh() {
+  echo "Reading a GitHub Actions run needs the GitHub CLI \`gh\`, signed in; $1." >&2
+  echo "In a Claude Code self-hosted runner session, don't sign gh in; use the GitHub MCP tools" >&2
+  echo "(mcp__github__*) that $(cd "$(dirname "$0")" && pwd)/../review/github-rest.md lists." >&2
+  echo "Elsewhere, run \`gh auth login\`, or download the log from $url with \"Download log archive\"" >&2
+  echo "and read it as a downloaded log." >&2
+  exit 1
+}
+
 github() {
   path=${url#*github.com/}
   path=${path%%[?#]*}
@@ -42,11 +53,7 @@ EOF
   case $id in *[!0-9]*) usage ;; esac
   repo=$owner/$name
   # GitHub serves job logs only to a signed-in client, even for a public repository.
-  if ! command -v gh > /dev/null || ! gh auth status > /dev/null 2>&1; then
-    echo "Reading a GitHub Actions run needs the GitHub CLI \`gh\`, installed and signed in with \`gh auth login\`." >&2
-    echo "Without it, download the log from $url with \"Download log archive\" and read it as a downloaded log." >&2
-    exit 1
-  fi
+  command -v gh > /dev/null || no_gh "it isn't installed"
   out=$HOME/tmp/ci-$name-$run
   # Newer gh refuses to print a log with colors without this flag, which
   # older gh doesn't know.
@@ -54,12 +61,17 @@ EOF
   gh api --help | grep -- --allow-escape-sequences > /dev/null && raw=--allow-escape-sequences
   mkdir -p "$out"
 
-  { read -r workflow attempt; cat; } < <(gh api "repos/$repo/actions/runs/$run" --jq '
+  gh api "repos/$repo/actions/runs/$run" --jq '
     "\(.workflow_id) \(.run_attempt)",
     "# Run \(.id) \"\(.name)\", attempt \(.run_attempt): \(.conclusion // .status)",
     "\(.event) on \(.head_branch) at \(.head_sha[0:9])"
       + ([.pull_requests[].number | "#\(.)"] | if length > 0 then ", PR " + join(", ") else "" end),
-    .html_url')
+    .html_url' > "$out/run.txt" || {
+    status=$?
+    [ "$status" -ne 4 ] || no_gh "it isn't signed in"
+    exit "$status"
+  }
+  { read -r workflow attempt; cat; } < "$out/run.txt"
 
   # The job the URL names, from any attempt, or the failed jobs of one attempt.
   if [ "$kind" = job ]; then
@@ -158,6 +170,7 @@ EOF
   # buildkite/<pipeline> to GitHub, so read the history from there.
   gh_repo=$(jq -r '.pipeline.provider.url // "" | sub("^https://github.com/"; "")' "$out/build.json")
   [ -n "$gh_repo" ] || return 0
+  command -v gh > /dev/null || return 0
   echo
   echo "buildkite/$pipeline on the last 15 commits of $gh_repo's default branch, newest first, where it ran:"
   if hist=$(gh api graphql -F owner="${gh_repo%%/*}" -F name="${gh_repo#*/}" -F context="buildkite/$pipeline" -f query='
@@ -168,13 +181,18 @@ query($owner: String!, $name: String!, $context: String!) {
     | "  \(.committedDate[0:10]) \(.status.context.state | ascii_downcase) \(.oid[0:9]) \(.status.context.targetUrl)"'); then
     [ -z "$hist" ] || printf '%s\n' "$hist"
   else
-    echo "(gh api graphql failed; reading through REST)" >&2
-    history_rest "$gh_repo" "buildkite/$pipeline"
+    status=$?
+    if [ "$status" -eq 4 ]; then
+      echo "  (skipped: gh isn't signed in; the GitHub MCP tools can list the commit statuses)"
+    else
+      echo "(gh api graphql failed; reading through REST)" >&2
+      history_rest "$gh_repo" "buildkite/$pipeline"
+    fi
   fi
 }
 
-# The same history from REST, for a gh with no GraphQL, as in Claude Code cloud
-# and self-hosted sessions: one statuses request per commit.
+# The same history from REST, for a gh with no GraphQL, as in Claude Code
+# cloud sessions: one statuses request per commit.
 history_rest() {
   local repo=$1 context=$2 sha date
   gh api "repos/$repo/commits?per_page=15" --jq '.[] | "\(.sha) \(.commit.committer.date)"' \
