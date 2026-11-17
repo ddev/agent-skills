@@ -41,6 +41,12 @@ EOF
   case $kind:$id in : | job:[0-9]* | attempts:[0-9]*) ;; *) usage ;; esac
   case $id in *[!0-9]*) usage ;; esac
   repo=$owner/$name
+  # GitHub serves job logs only to a signed-in client, even for a public repository.
+  if ! command -v gh > /dev/null || ! gh auth status > /dev/null 2>&1; then
+    echo "Reading a GitHub Actions run needs the GitHub CLI \`gh\`, installed and signed in with \`gh auth login\`." >&2
+    echo "Without it, download the log from $url with \"Download log archive\" and read it as a downloaded log." >&2
+    exit 1
+  fi
   out=$HOME/tmp/ci-$name-$run
   # Newer gh refuses to print a log with colors without this flag, which
   # older gh doesn't know.
@@ -121,7 +127,7 @@ EOF
 
   base=https://buildkite.com/$org/$pipeline/builds/$n
   if ! curl -fsS "$base.json" -o "$out/build.json" 2> /dev/null; then
-    echo "Can't read $base without signing in. If it is private, run \`bk auth login\`," >&2
+    echo "Can't read $base without signing in. If it is private, run \`bk auth login --org=$org --token=<token>\`," >&2
     echo "then \`bk build view $n --pipeline $pipeline --org $org\` and \`bk job log <job-uuid> --org $org --no-timestamps\`." >&2
     exit 1
   fi
