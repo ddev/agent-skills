@@ -22,7 +22,7 @@ a fork. Name the upstream repository instead when the request is about it.
 | `gh pr create --title T --body-file F` | `gh api 'repos/<owner>/<repo>/pulls' -f title=T -F body=@F -f head=<fork owner>:<branch> -f base=<base>`, with `-F draft=true` for a draft |
 | `gh pr edit N --title T --body-file F` | `gh api -X PATCH 'repos/<owner>/<repo>/pulls/N' -f title=T -F body=@F` |
 | `gh issue view M --comments` | `gh api 'repos/<owner>/<repo>/issues/M' --jq '.title, .body'`, then `gh api 'repos/<owner>/<repo>/issues/M/comments' --jq '.[] \| "--- \(.user.login)\n\(.body)"'` |
-| `gh issue create --body-file F` | `gh api 'repos/<owner>/<repo>/issues' -f title=T -F body=@F` |
+| `gh issue create --title T --body-file F` | `gh api 'repos/<owner>/<repo>/issues' -f title=T -F body=@F` |
 
 ## Pending reviews
 

@@ -71,7 +71,7 @@ rest() {
   gh api "$p/pulls/$n/comments?per_page=100" > "$d/review-comments.json"
   gh api "$p/pulls/$n/ccr/review_threads" > "$d/threads.json" 2>/dev/null || echo null > "$d/threads.json"
   for i in $(jq -r '[.body // "" | scan("(?i)\\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\\s+#(\\d+)") | .[0]] | unique | .[]' "$d/pr.json"); do
-    gh api "$p/issues/$i" > "$d/issue.json"
+    gh api "$p/issues/$i" > "$d/issue.json" || { echo "(skipping #$i from the body)" >&2; continue; }
     gh api "$p/issues/$i/comments?per_page=100" > "$d/issue-comments.json"
     jq --slurpfile c "$d/issue-comments.json" '. + {thread: $c[0]}' "$d/issue.json"
   done | jq -s . > "$d/issues.json"
@@ -86,7 +86,7 @@ def more(total; shown; what): if total > shown then "!! only \(shown) of \(total
 def who: .user.login // "ghost";
 def indent: gsub("\n"; "\n  ") | "  " + .;
 $pr[0] as $p | $rc[0] as $c
-| "# #\($p.number) \($p.title)\n\($p.html_url)\nstate=\($p.state) draft=\($p.draft) author=\($p | who) association=\($p.author_association) viewer=\($me[0].login)\nbase=\($p.base.ref) \($p.base.sha)\nhead=\($p.head.repo.full_name // "?"):\($p.head.ref) \($p.head.sha)\n(read through REST: closing issues are found from keywords in the body)\n\n## Body\n\($p.body // "")\n"
+| "# #\($p.number) \($p.title)\n\($p.html_url)\nstate=\(if $p.merged_at then "MERGED" else $p.state | ascii_upcase end) draft=\($p.draft) author=\($p | who) association=\($p.author_association) viewer=\($me[0].login)\nbase=\($p.base.ref) \($p.base.sha)\nhead=\($p.head.repo.full_name // "?"):\($p.head.ref) \($p.head.sha)\n(read through REST: closing issues are found from keywords in the body)\n\n## Body\n\($p.body // "")\n"
 , "## Commits\n" + more($p.commits; $commits[0] | length; "commits") + ([$commits[0][] | (.commit.message | split("\n")) as $l | "- \(.sha[0:9]) \($l[0])" + (($l[1:] | join("\n") | sub("^\\s+"; "")) as $b | if $b != "" then "\n" + ($b | indent) else "" end)] | join("\n")) + "\n"
 , "## Files\n" + more($p.changed_files; $files[0] | length; "files") + ([$files[0][] | "- \(.filename) +\(.additions) -\(.deletions)"] | join("\n")) + "\n"
 , ([($runs[0].check_runs[] | select(.status != "completed" or (.conclusion | IN("success", "skipped", "neutral") | not)) | "- \(.name): \(.conclusion // .status | ascii_upcase) \(.details_url)")
@@ -96,7 +96,7 @@ $pr[0] as $p | $rc[0] as $c
 , "## PR comments\n" + more($p.comments; $comments[0] | length; "comments") + ([$comments[0][] | select(.body | startswith("<!-- bot:") | not) | "--- \(who) \(.created_at)\n\(.body)"] | join("\n")) + "\n"
 , "## Reviews\n" + (if ($reviews[0] | length) == 100 then "!! only the first 100 reviews shown\n" else "" end) + ([$reviews[0][] | "--- \(who) \(.state) id=\(.id) commit=\((.commit_id // "")[0:9]) \(.submitted_at // "")\n\(.body)"] | join("\n")) + "\n"
 , "## Threads\n" + more($p.review_comments; $c | length; "review comments")
-  + (if $threads[0] == null then "(resolution unknown through REST)\n" else "" end)
+  + (if $threads[0] == null and ($c | length) > 0 then "(resolution unknown through REST)\n" else "" end)
   + ((if $threads[0] != null
       then [$threads[0][] | . as $t | {path, line, resolved: .resolved, outdated: .outdated, ids: .comment_ids}]
       else [$c[] | select(.in_reply_to_id == null) | . as $r | {path, line, resolved: "?", outdated: (.line == null), ids: [$c[] | select(.id == $r.id or .in_reply_to_id == $r.id) | .id]}]
@@ -106,11 +106,9 @@ $pr[0] as $p | $rc[0] as $c
 '
 }
 
-if ! out=$(graphql 2> "${TMPDIR:-/tmp}/pr-context-graphql.$$"); then
-  echo "(gh api graphql failed: $(head -c 200 "${TMPDIR:-/tmp}/pr-context-graphql.$$"); reading through REST)" >&2
-  rm -f "${TMPDIR:-/tmp}/pr-context-graphql.$$"
+if ! out=$(graphql); then
+  echo "(gh api graphql failed; reading through REST)" >&2
   rest
   exit
 fi
-rm -f "${TMPDIR:-/tmp}/pr-context-graphql.$$"
 printf '%s\n' "$out"

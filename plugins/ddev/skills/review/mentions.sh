@@ -61,7 +61,7 @@ rest() {
    | unique | if length == 0 then "No mentions." else join("\n") end)'
 }
 
-if ! out=$(graphql 2> /dev/null); then
+if ! out=$(graphql); then
   echo "(gh api graphql failed; reading through REST)" >&2
   rest
   exit

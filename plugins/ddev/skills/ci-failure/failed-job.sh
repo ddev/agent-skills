@@ -165,9 +165,10 @@ query($owner: String!, $name: String!, $context: String!) {
   repository(owner: $owner, name: $name) { defaultBranchRef { target { ... on Commit {
     history(first: 15) { nodes { oid committedDate status { context(name: $context) { state targetUrl } } } } } } } }
 }' --jq '.data.repository.defaultBranchRef.target.history.nodes[] | select(.status.context)
-    | "  \(.committedDate[0:10]) \(.status.context.state | ascii_downcase) \(.oid[0:9]) \(.status.context.targetUrl)"' 2> /dev/null); then
+    | "  \(.committedDate[0:10]) \(.status.context.state | ascii_downcase) \(.oid[0:9]) \(.status.context.targetUrl)"'); then
     [ -z "$hist" ] || printf '%s\n' "$hist"
   else
+    echo "(gh api graphql failed; reading through REST)" >&2
     history_rest "$gh_repo" "buildkite/$pipeline"
   fi
 }
@@ -175,9 +176,8 @@ query($owner: String!, $name: String!, $context: String!) {
 # The same history from REST, for a gh with no GraphQL, as in Claude Code cloud
 # and self-hosted sessions: one statuses request per commit.
 history_rest() {
-  local repo=$1 context=$2 branch sha date
-  branch=$(gh api "repos/$repo" --jq .default_branch)
-  gh api "repos/$repo/commits?sha=$branch&per_page=15" --jq '.[] | "\(.sha) \(.commit.committer.date)"' \
+  local repo=$1 context=$2 sha date
+  gh api "repos/$repo/commits?per_page=15" --jq '.[] | "\(.sha) \(.commit.committer.date)"' \
     | while read -r sha date; do
       gh api "repos/$repo/commits/$sha/statuses?per_page=100" \
         --jq "[.[] | select(.context == \"$context\")][0] // empty

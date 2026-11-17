@@ -6,9 +6,9 @@ Skills for DDEV maintainers working with coding agents.
 
 | Skill | What it does |
 |---|---|
-| [`/ddev:ci-failure`](plugins/ddev/skills/ci-failure/SKILL.md) | Diagnoses a failing CI job from a GitHub Actions or Buildkite URL, or a downloaded log: finds the first real error, checks the job's recent history to tell a regression from an intermittent or upstream failure, and fixes the cause. Ask "is it intermittent?" with the run URL, or run `/ddev:ci-failure <url>`. Needs bash, git and a signed-in [gh](https://cli.github.com/) or the `gh` of a Claude Code cloud or self-hosted session, jq for Buildkite and in those sessions, an authorized [bk](https://github.com/buildkite/cli) to find every Buildkite failure of a test, and Docker with DDEV to reproduce. |
-| [`/ddev:commit`](plugins/ddev/skills/commit/SKILL.md) | Writes a commit message that doubles as the PR description, runs the repository's checks, and commits locally; later it keeps the PR title and body in sync with the branch. Ask "make a branch and commit", or run `/ddev:commit`. Needs bash and git, plus a signed-in [gh](https://cli.github.com/) or the `gh` of a Claude Code cloud or self-hosted session for PRs and issues. |
-| [`/ddev:review`](plugins/ddev/skills/review/SKILL.md) | Reviews a PR, branch or commit in a DDEV repository: runs it against a baseline build, reports evidence and gaps, and drafts a pending GitHub review. Ask "let's review 1234", or run `/ddev:review 1234`. Needs bash, git, a signed-in [gh](https://cli.github.com/) or the `gh` of a Claude Code cloud or self-hosted session, jq in those sessions, and Docker with DDEV, on Linux or macOS. On Windows, use WSL2. |
+| [`/ddev:ci-failure`](plugins/ddev/skills/ci-failure/SKILL.md) | Diagnoses a failing CI job from a GitHub Actions or Buildkite URL, or a downloaded log: finds the first real error, checks the job's recent history to tell a regression from an intermittent or upstream failure, and fixes the cause. Ask "is it intermittent?" with the run URL, or run `/ddev:ci-failure <url>`. Needs bash, git and a signed-in [gh](https://cli.github.com/), jq for Buildkite, an authorized [bk](https://github.com/buildkite/cli) to find every Buildkite failure of a test, and Docker with DDEV to reproduce. |
+| [`/ddev:commit`](plugins/ddev/skills/commit/SKILL.md) | Writes a commit message that doubles as the PR description, runs the repository's checks, and commits locally; later it keeps the PR title and body in sync with the branch. Ask "make a branch and commit", or run `/ddev:commit`. Needs bash and git, plus a signed-in [gh](https://cli.github.com/) for PRs and issues. |
+| [`/ddev:review`](plugins/ddev/skills/review/SKILL.md) | Reviews a PR, branch or commit in a DDEV repository: runs it against a baseline build, reports evidence and gaps, and drafts a pending GitHub review. Ask "let's review 1234", or run `/ddev:review 1234`. Needs bash, git, a signed-in [gh](https://cli.github.com/), and Docker with DDEV, on Linux or macOS. On Windows, use WSL2. |
 
 ## Install in Claude Code
 
@@ -17,7 +17,7 @@ claude plugin install ddev --marketplace ddev/agent-skills
 ```
 
 In Claude Code cloud and self-hosted sessions, `gh` passes on only `gh api` REST
-requests. The scripts fall back to REST there, and
+requests. The scripts fall back to REST there, which needs jq, and
 [`github-rest.md`](plugins/ddev/skills/review/github-rest.md) gives the
 skills REST forms of the other `gh` commands.
 
