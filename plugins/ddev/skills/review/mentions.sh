@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # List the issues and PRs that mention an issue or PR, with their state, so
 # related issues and earlier attempts can be read. Falls back to REST where gh
-# has no GraphQL, as in Claude Code cloud and self-hosted sessions.
+# has no GraphQL, as in Claude Code cloud sessions.
 # Usage: mentions.sh N [owner/repo]
 # shellcheck disable=SC2016 # the $ in the GraphQL query and jq filter is not shell
 set -euo pipefail
@@ -10,6 +10,15 @@ n=${1:?usage: mentions.sh N [owner/repo]}
 repo=${2:-'{owner}/{repo}'}
 owner=${repo%%/*}
 name=${repo#*/}
+
+# gh exits with status 4 when it has no sign-in, as on a Claude Code
+# self-hosted runner whose workspace nobody signed in.
+no_gh() {
+  echo "$1. In a Claude Code self-hosted runner session, don't sign gh in;" >&2
+  echo "use the GitHub MCP tools (mcp__github__*) that $(cd "$(dirname "$0")" && pwd)/github-rest.md lists." >&2
+  exit 1
+}
+command -v gh > /dev/null || no_gh "gh isn't installed"
 
 graphql() {
 gh api graphql -F owner="$owner" -F name="$name" -F n="$n" -f query='
@@ -61,9 +70,12 @@ rest() {
    | unique | if length == 0 then "No mentions." else join("\n") end)'
 }
 
-if ! out=$(graphql); then
-  echo "(gh api graphql failed; reading through REST)" >&2
-  rest
+if out=$(graphql); then
+  printf '%s\n' "$out"
   exit
+else
+  status=$?
 fi
-printf '%s\n' "$out"
+[ "$status" -ne 4 ] || no_gh "gh isn't signed in to GitHub"
+echo "(gh api graphql failed; reading through REST)" >&2
+rest

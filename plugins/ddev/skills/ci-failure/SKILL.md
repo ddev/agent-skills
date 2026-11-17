@@ -15,8 +15,9 @@ the top level. Without such a URL, check `git remote -v` first. A fork with
 no `ddev` remote prints `ddev` for
 `gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`. Otherwise, tell
 the user that `/ddev:ci-failure` doesn't apply there, and diagnose without
-it. If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
-self-hosted sessions, read `<skill dir>/../review/github-rest.md`.
+it. In a Claude Code self-hosted runner session, or when `gh` isn't signed
+in or reports that GraphQL isn't available, read
+`<skill dir>/../review/github-rest.md` first.
 
 Read the repository's `AGENTS.md` first for how to run a single test.
 
@@ -24,7 +25,7 @@ The scripts need `jq`, and use two CLIs:
 
 | CLI | Used for | When it is missing or signed out |
 | --- | --- | --- |
-| `gh` | GitHub Actions logs and history, which GitHub serves only to a signed-in client | Install it from <https://cli.github.com>, then `gh auth login` |
+| `gh` | GitHub Actions logs and history, which GitHub serves only to a signed-in client | Install it from <https://cli.github.com>, then `gh auth login`, except in a shared workspace such as a Claude Code self-hosted runner's: there, use the GitHub MCP tools that `github-rest.md` lists |
 | `bk` | Searching all Buildkite builds, including retried jobs | Install it from <https://github.com/buildkite/cli>, then `bk auth login --org=ddev --token=<token>` with `read_builds` and `read_build_logs`, or `bk auth login --org=ddev` to sign in |
 
 The scripts check both and print what to do. Tell the user which one is
