@@ -11,9 +11,12 @@ running the changed behavior when feasible.
 This skill is only for DDEV repositories: one with a remote under
 `github.com/ddev/`, a fork of one, or a DDEV add-on with an `install.yaml` at
 the top level. Check `git remote -v` first. A fork with no `ddev` remote
-prints `ddev` for `gh repo view --json parent --jq .parent.owner.login`. In
-any other repository, tell the user that `/ddev:review` doesn't apply there,
-and review without it.
+prints `ddev` for `gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`.
+In any other repository, tell the user that `/ddev:review` doesn't apply
+there, and review without it.
+
+If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
+self-hosted sessions, read `<skill dir>/github-rest.md`.
 
 ## Modes
 
@@ -319,6 +322,8 @@ mutation($id: ID!, $body: String!) {
   updatePullRequestReview(input: {pullRequestReviewId: $id, body: $body}) { pullRequestReview { id } }
 }'
 ```
+
+Without GraphQL, `<skill dir>/github-rest.md` covers both steps.
 
 Then give the user the PR's "Files changed" link to finish the review.
 

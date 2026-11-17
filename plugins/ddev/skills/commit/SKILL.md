@@ -13,9 +13,13 @@ which is why the change exists and how to check it by hand.
 This skill is only for DDEV repositories: one with a remote under
 `github.com/ddev/`, a fork of one, or a DDEV add-on with an `install.yaml` at
 the top level. Check `git remote -v` first. A fork with no `ddev` remote
-prints `ddev` for `gh repo view --json parent --jq .parent.owner.login`. In
-any other repository, tell the user that `/ddev:commit` doesn't apply there,
-and follow that repository's own conventions instead.
+prints `ddev` for `gh api 'repos/{owner}/{repo}' --jq .parent.owner.login`.
+In any other repository, tell the user that `/ddev:commit` doesn't apply
+there, and follow that repository's own conventions instead.
+
+If `gh` reports that GraphQL isn't available, as in Claude Code cloud and
+self-hosted sessions, read `<skill dir>/../review/github-rest.md` for the
+REST forms of the `gh pr` and `gh issue` commands below.
 
 ## 1. Read the repository's rules
 

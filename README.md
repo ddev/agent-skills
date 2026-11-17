@@ -16,6 +16,15 @@ Skills for DDEV maintainers working with coding agents.
 claude plugin install ddev --marketplace ddev/agent-skills
 ```
 
+In Claude Code cloud and self-hosted sessions, `gh` passes on only `gh api` REST
+requests. The scripts fall back to REST there, which needs jq, and
+[`github-rest.md`](plugins/ddev/skills/review/github-rest.md) gives the
+skills REST forms of the other `gh` commands.
+
+A plugin installed on your own machine isn't in those sessions. They get the
+plugins and skills of your claude.ai account and organization instead, so add
+this plugin there to use it in a cloud or self-hosted session.
+
 ## Update
 
 Auto-update is off for this marketplace by default. To turn it on, run
